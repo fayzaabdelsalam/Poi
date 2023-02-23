@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "eclipselink.ddl-generation",
+    "type": "java.lang.String",
+    "description": "A description for 'eclipselink.ddl-generation'"
+  },
+  {
+    "name": "eclipselink.create-ddl-jdbc-file-name",
+    "type": "java.lang.String",
+    "description": "A description for 'eclipselink.create-ddl-jdbc-file-name'"
+  },
+  {
+    "name": "eclipselink.drop-ddl-jdbc-file-name",
+    "type": "java.lang.String",
+    "description": "A description for 'eclipselink.drop-ddl-jdbc-file-name'"
+  },
+  {
+    "name": "eclipselink.ddl-generation_mode",
+    "type": "java.lang.String",
+    "description": "A description for 'eclipselink.ddl-generation_mode'"
+  },
+  {
+    "name": "eclipselink.ddl-generation_mode",
+    "type": "java.lang.String",
+    "description": "A description for 'eclipselink.ddl-generation_mode'"
+  }
+]}
