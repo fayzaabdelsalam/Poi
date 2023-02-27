@@ -2,12 +2,15 @@ package com.example.poi.services;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -17,6 +20,13 @@ import org.springframework.stereotype.Service;
 
 import com.example.poi.entities.UserEntity;
 import com.example.poi.repositories.UserRepository;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -29,10 +39,11 @@ public class UserService {
 	
 	static final String OUTPUTFILE = "dataout.xlsx";
 	static final String INPUTFILE = "data.xlsx";
+	static final String PDFFILE = "ConvertedPDF.pdf";
 	static final String SCHEMA = "kyc db";
 	static final String[] COLUMNS = {"ID","Email","Password"};
 	
-	public void writeData() 
+	public void writeData() throws DocumentException 
 	{
 				try (XSSFWorkbook workbook = new XSSFWorkbook()) 
 				{
@@ -41,9 +52,72 @@ public class UserService {
 					setColumnNames(row);
 					copyEntity(spreadsheet);
 					writeFile(workbook);
+					pdfConverter(workbook);
 				}
 				catch (IOException e) {	e.printStackTrace();	}	
 	}
+	
+		public void pdfConverter(XSSFWorkbook workbook) throws FileNotFoundException, DocumentException
+		{
+				XSSFSheet sheet = workbook.getSheetAt(0);
+		        List<String> headerList = getRow(0,sheet);
+
+		        Document document = new Document();
+		        PdfWriter.getInstance(document, new FileOutputStream(PDFFILE));
+
+		        document.open();
+		        PdfPTable table = new PdfPTable(sheet.getRow(0).getPhysicalNumberOfCells());
+		        addPDFData(true, headerList, table);
+		        int rows = sheet.getLastRowNum();
+		        for (int i = 1; i <= rows; i++) {
+		            List<String> rowList = getRow(i,sheet);
+		            addPDFData(false, rowList, table);
+		            document.add(table);
+		            table = new PdfPTable(sheet.getRow(0).getPhysicalNumberOfCells());
+		        }
+
+		        document.close();
+		    }
+		
+		public List<String> getRow (int index, XSSFSheet sheet) {
+			List<String> list = new ArrayList<>();
+			
+	        for (Cell cell : sheet.getRow(index)) {
+	            switch (cell.getCellType()) {
+	                case Cell.CELL_TYPE_STRING:
+	                    list.add(cell.getStringCellValue());
+	                    break;
+	                case Cell.CELL_TYPE_NUMERIC:
+	                    list.add(String.valueOf(cell.getNumericCellValue()));
+	                    break;
+	                case Cell.CELL_TYPE_BOOLEAN:
+	                    list.add(String.valueOf(cell.getBooleanCellValue()));
+	                    break;
+	                case Cell.CELL_TYPE_FORMULA:
+	                    list.add(cell.getCellFormula());
+	                    break;
+	                default:
+	            }
+	        }
+			
+//			XSSFRow row = sheet.getRow(index); 
+//			list.add(String.valueOf(row.getCell(1).getNumericCellValue()));
+//			list.add(row.getCell(2).getStringCellValue());
+//			list.add(String.valueOf(row.getCell(3).getNumericCellValue()));
+			return list;
+		}
+	
+	    private void addPDFData (boolean isHeader, List<String> headerList, PdfPTable table) {
+	        headerList.stream().forEach(column -> {
+	                    PdfPCell header = new PdfPCell();
+	                    if (isHeader) {
+	                        header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+	                        header.setBorderWidth(2);
+	                    }
+	                    header.setPhrase(new Phrase(column));
+	                    table.addCell(header);
+	                });
+	    }
 	
 	public void writeFile(XSSFWorkbook workbook)
 	{
